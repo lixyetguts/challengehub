@@ -1,0 +1,17 @@
+{
+  "name": "challengehub",
+  "version": "1.0.0",
+  "description": "Plateforme de defis quotidiens et duels",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.22.2",
+    "socket.io": "^4.8.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

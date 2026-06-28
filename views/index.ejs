@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChallengeHub - Salon <%= codeSession %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-slate-950 text-white font-sans antialiased">
+
+    <!-- NOTIF FLASH AVEC APPAREIL PHOTO -->
+    <div id="toast-notif" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm pointer-events-none opacity-0 transition duration-300 transform -translate-y-5 flex items-center gap-4 max-w-sm w-full">
+        <img id="toast-img-pote" src="" class="w-12 h-12 rounded-lg object-cover border border-white/20 hidden">
+        <div>
+            <p>🔥 <span id="toast-msg">Un ami a validé un défi !</span></p>
+        </div>
+    </div>
+
+    <!-- MODAL INTERFACE CAMERA (S'ouvre pour prendre la photo) -->
+    <div id="camera-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full text-center space-y-4">
+            <h3 class="text-base font-black uppercase tracking-wide text-indigo-400">📷 Preuve Photo Obligatoire</h3>
+            <p class="text-xs text-slate-400">Prends-toi en photo en train de réaliser le défi.</p>
+            
+            <div class="relative rounded-xl overflow-hidden bg-black aspect-video border border-slate-700">
+                <video id="video-stream" autoplay playsinline class="w-full h-full object-cover"></video>
+                <canvas id="canvas-screenshot" class="hidden"></canvas>
+            </div>
+
+            <!-- GROS MESSAGE DE PRÉVENTION ROUGE DANS LE MODAL -->
+            <div class="bg-red-950/40 border border-red-500/40 rounded-xl p-3 text-center">
+                <p class="text-red-400 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Attention Sécurité
+                </p>
+                <p class="text-red-300 text-[11px] mt-1 font-semibold">
+                    Ne partagez pas de données/photos sensibles (visages, documents, éléments privés).
+                </p>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="fermerCamera()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-xs font-bold py-2.5 rounded-xl">Annuler</button>
+                <button onclick="capturerPhoto()" class="w-1/2 bg-indigo-600 hover:bg-indigo-500 text-xs font-black py-2.5 rounded-xl uppercase">Prendre la photo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
+        <span class="text-xl font-black text-indigo-500 tracking-wide">CHALLENGE<span class="text-emerald-400">HUB</span></span>
+        <div class="text-right">
+            <p class="text-sm font-bold text-slate-200" id="profil-name"><%= user.pseudo %></p>
+            <p class="text-xs text-amber-400 font-semibold" id="profil-rank">Niv. <%= user.niveau %> • <%= user.rang %></p>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-4 space-y-6">
+
+        <!-- GROS BANDEAU DE PRÉVENTION GENERAL ROUGE -->
+        <div class="bg-red-950/30 border-2 border-red-500/40 rounded-2xl p-4 flex items-center gap-4 shadow-lg">
+            <div class="bg-red-500/10 text-red-400 rounded-xl p-3 text-xl hidden sm:block">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-black text-red-400 uppercase tracking-wider">🚨 Avis important de modération et sécurité</h4>
+                <p class="text-xs text-red-200/80 mt-1 font-medium leading-relaxed">
+                    Toutes les photos prises dans ce salon sont partagées en direct aux autres membres connectés. Pour votre sécurité, <span class="text-red-400 font-black underline text-sm">ne partagez pas de données/photos sensibles</span> (visages confidentiels, informations personnelles, etc.) sur la plateforme.
+                </p>
+            </div>
+        </div>
+
+        <!-- INFOS SESSION -->
+        <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <span class="text-[10px] bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 px-2.5 py-1 rounded-md font-bold uppercase">Preuve par Caméra Active</span>
+                <h1 class="text-2xl font-black mt-2 tracking-wide">CODE : <span class="text-emerald-400 font-mono select-all"><%= codeSession %></span></h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-center">
+                    <span class="text-[10px] text-slate-400 uppercase font-bold">Mon Score</span>
+                    <p class="text-base font-mono font-black text-emerald-400" id="total-xp"><%= user.xp %> XP</p>
+                </div>
+                <% if (isCreateur) { %>
+                    <form action="/fermer-salon" method="POST" onsubmit="return confirm('Fermer et supprimer définitivement ce salon h24 ?');">
+                        <input type="hidden" name="code" value="<%= codeSession %>">
+                        <input type="hidden" name="pseudo" value="<%= user.pseudo %>">
+                        <button type="submit" class="bg-rose-600/20 text-rose-400 border border-rose-500/30 font-bold px-4 py-3 rounded-xl text-xs uppercase hover:bg-rose-600 hover:text-white transition">Fermer le Salon</button>
+                    </form>
+                <% } else { %>
+                    <a href="/" class="bg-slate-800 border border-slate-700 text-slate-300 font-bold px-4 py-3 rounded-xl text-xs uppercase hover:bg-slate-700 transition">Quitter</a>
+                <% } %>
+            </div>
+        </section>
+
+        <!-- DÉFIS -->
+        <section class="space-y-4">
+            <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">🎯 Objectifs du jour</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <% challenges.forEach(defi => { %>
+                    <% const accompli = user.defisFaits.includes(defi.id); %>
+                    <div id="box-<%= defi.id %>" class="bg-slate-900 rounded-xl p-5 border <%= accompli ? 'border-emerald-500/30 opacity-50 bg-slate-900/40' : 'border-slate-800' %> flex flex-col justify-between space-y-4">
+                        <div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300">Obligatoire : Photo 📸</span>
+                            <h3 class="font-bold text-sm mt-2"><%= defi.titre %></h3>
+                            <p class="text-xs text-slate-400 mt-1"><%= defi.desc %></p>
+                        </div>
+                        <button id="action-<%= defi.id %>" onclick="ouvrirCamera(<%= defi.id %>)" <%= accompli ? 'disabled' : '' %>
+                            class="w-full font-bold py-2 rounded-lg text-xs transition flex items-center justify-center gap-2 <%= accompli ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white' %>">
+                            <%= accompli ? 'Validé avec succès ✔️' : 'Prendre Photo & Valider' %>
+                        </button>
+                    </div>
+                <% }) %>
+            </div>
+        </section>
+
+        <!-- CLASSEMENT -->
+        <section class="bg-slate-900 rounded-2xl p-6 border border-slate-800 space-y-4">
+            <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">🏆 Classement Live avec Preuves</h2>
+            <div id="board-live" class="space-y-2">
+                <% leaderboard.forEach(player => { %>
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 <%= player.pseudo === user.pseudo ? 'ring-1 ring-indigo-500/70' : '' %>">
+                        <div class="flex items-center space-x-3 text-sm">
+                            <span class="font-black text-slate-500 w-6">#<%= player.position %></span>
+                            <% if(player.dernierePhoto) { %>
+                                <img src="<%= player.dernierePhoto %>" class="w-8 h-8 rounded-md object-cover border border-slate-700 cursor-pointer" onclick="window.open(this.src)">
+                            <% } else { %>
+                                <div class="w-8 h-8 rounded-md bg-slate-800 flex items-center justify-center text-[10px]">❌</div>
+                            <% } %>
+                            <span class="font-bold"><%= player.pseudo %> <span class="text-[10px] text-slate-500 font-normal ml-1">(Niv.<%= player.niveau %>)</span></span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-indigo-400"><%= player.xp %> XP</span>
+                    </div>
+                <% }) %>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const socket = io();
+        const monPseudo = "<%= user.pseudo %>";
+        const codeSession = "<%= codeSession %>";
+
+        let currentDefiId = null;
+        let localStream = null;
+
+        socket.emit('rejoindre_salon', { pseudo: monPseudo, codeSession: codeSession });
+
+        async function ouvrirCamera(defiId) {
+            currentDefiId = defiId;
+            document.getElementById('camera-modal').classList.remove('hidden');
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                document.getElementById('video-stream').srcObject = localStream;
+            } catch (err) {
+                alert("Impossible d'accéder à l'appareil photo. Vérifiez vos autorisations.");
+                fermerCamera();
+            }
+        }
+
+        function fermerCamera() {
+            document.getElementById('camera-modal').classList.add('hidden');
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function capturerPhoto() {
+            const video = document.getElementById('video-stream');
+            const canvas = document.getElementById('canvas-screenshot');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            fermerCamera();
+
+            socket.emit('action_valider', { id: currentDefiId, image: photoBase64 });
+        }
+
+        socket.on('validation_reussie', (data) => {
+            document.getElementById('profil-rank').innerText = `Niv. ${data.joueur.niveau} • ${data.joueur.rang}`;
+            document.getElementById('total-xp').innerText = `${data.joueur.xp} XP`;
+            const btn = document.getElementById(`action-${data.defiId}`);
+            btn.innerText = "Validé avec succès ✔️";
+            btn.disabled = true;
+            btn.className = "w-full font-bold py-2 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed";
+            document.getElementById(`box-${data.defiId}`).classList.add('border-emerald-500/30', 'opacity-50', 'bg-slate-900/40');
+        });
+
+        socket.on('maj_classement_global', (nouveauLeaderboard) => {
+            const container = document.getElementById('board-live');
+            container.innerHTML = '';
+            nouveauLeaderboard.forEach(player => {
+                const estMoi = player.pseudo === monPseudo;
+                const imgTag = player.dernierePhoto ? `<img src="${player.dernierePhoto}" class="w-8 h-8 rounded-md object-cover border border-slate-700" onclick="window.open(this.src)">` : `<div class="w-8 h-8 rounded-md bg-slate-800 flex items-center justify-center text-[10px]">❌</div>`;
+                
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 ${estMoi ? 'ring-1 ring-indigo-500/70' : ''}`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3 text-sm">
+                        <span class="font-black text-slate-500 w-6">#${player.position}</span>
+                        ${imgTag}
+                        <span class="font-bold">${player.pseudo} <span class="text-[10px] text-slate-500 font-normal ml-1">(Niv.${player.niveau})</span></span>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-indigo-400">${player.xp} XP</span>
+                `;
+                container.appendChild(div);
+            });
+        });
+
+        socket.on('alerte_pote_reussite', (data) => {
+            if (data.pseudo !== monPseudo) {
+                const toast = document.getElementById('toast-notif');
+                const toastImg = document.getElementById('toast-img-pote');
+                
+                document.getElementById('toast-msg').innerText = `${data.pseudo} a validé : "${data.titreDefi}" !`;
+                
+                if(data.image) {
+                    toastImg.src = data.image;
+                    toastImg.classList.remove('hidden');
+                }
+
+                toast.classList.remove('opacity-0', '-translate-y-5');
+                setTimeout(() => { 
+                    toast.classList.add('opacity-0', '-translate-y-5'); 
+                }, 4000);
+            }
+        });
+
+        socket.on('salon_ferme_par_hote', () => {
+            alert("L'hôte a fermé la session.");
+            window.location.href = "/";
+        });
+    </script>
+</body>
+</html>

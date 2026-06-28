@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChallengeHub - Rejoindre le salon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex items-center justify-center min-h-screen font-sans">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl space-y-6">
+        <div>
+            <h1 class="text-3xl font-black tracking-wider text-indigo-500">CHALLENGE<span class="text-emerald-400">HUB</span></h1>
+            <p class="text-slate-400 text-xs mt-1">Deviens le meilleur de ton groupe</p>
+        </div>
+        <form action="/connexion" method="POST" class="space-y-4">
+            <input type="text" name="pseudo" placeholder="Choisis un pseudo..." required max="15"
+                class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-center font-bold">
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 transition font-black py-3 rounded-xl uppercase text-sm tracking-wider">
+                Entrer dans le salon ➔
+            </button>
+        </form>
+    </div>
+</body>
+</html>

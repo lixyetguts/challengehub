@@ -1,0 +1,16 @@
+{
+  "utilisateurs": {
+    "lixyetguts": {
+      "pseudo": "lixyetguts",
+      "xp": 650,
+      "niveau": 2,
+      "rang": "Débutant",
+      "defisValides": [
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "defisDuJour": []
+}

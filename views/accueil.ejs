@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChallengeHub - Menu Principal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white flex flex-col items-center justify-center min-h-screen font-sans p-4">
+
+    <div class="max-w-md w-full text-center mb-8">
+        <h1 class="text-4xl font-black tracking-wider text-indigo-500">CHALLENGE<span class="text-emerald-400">HUB</span></h1>
+        <p class="text-slate-400 text-sm mt-2">Crée ton salon privé ou rejoins la session de tes potes h24</p>
+        
+        <% if (erreur) { %>
+            <div class="mt-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs py-2 px-4 rounded-xl font-semibold">
+                ⚠️ <%= erreur %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full">
+        
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl">
+            <div>
+                <h2 class="text-lg font-black text-indigo-400 uppercase tracking-wide">👑 Créer un salon</h2>
+                <p class="text-slate-400 text-xs mt-1">Génère un salon unique et invite tes potes avec ton code.</p>
+            </div>
+            <form action="/creer-salon" method="POST" class="space-y-3">
+                <input type="text" name="pseudo" placeholder="Ton pseudo..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-center font-bold focus:outline-none focus:border-indigo-500">
+                <input type="text" name="code" placeholder="Code de session (Ex: COCORICO)..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-center font-black placeholder-slate-600 tracking-wider uppercase focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 transition font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                    Lancer le Salon
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between space-y-4 shadow-xl">
+            <div>
+                <h2 class="text-lg font-black text-emerald-400 uppercase tracking-wide">🤝 Rejoindre un pote</h2>
+                <p class="text-slate-400 text-xs mt-1">Saisis le code de session exact fourni par ton ami.</p>
+            </div>
+            <form action="/rejoindre-salon" method="POST" class="space-y-3">
+                <input type="text" name="pseudo" placeholder="Ton pseudo..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-center font-bold focus:outline-none focus:border-emerald-500">
+                <input type="text" name="code" placeholder="Code de session secret..." required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-center font-black placeholder-slate-600 tracking-wider uppercase focus:outline-none focus:border-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 transition font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                    Accéder à la session
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>
