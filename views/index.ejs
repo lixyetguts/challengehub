@@ -6,19 +6,9 @@
     <title>ChallengeHub - Salon <%= codeSession %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body class="bg-slate-950 text-white font-sans antialiased">
 
-    <!-- NOTIF FLASH AVEC APPAREIL PHOTO -->
-    <div id="toast-notif" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm pointer-events-none opacity-0 transition duration-300 transform -translate-y-5 flex items-center gap-4 max-w-sm w-full">
-        <img id="toast-img-pote" src="" class="w-12 h-12 rounded-lg object-cover border border-white/20 hidden">
-        <div>
-            <p>🔥 <span id="toast-msg">Un ami a validé un défi !</span></p>
-        </div>
-    </div>
-
-    <!-- MODAL INTERFACE CAMERA (S'ouvre pour prendre la photo) -->
     <div id="camera-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full text-center space-y-4">
             <h3 class="text-base font-black uppercase tracking-wide text-indigo-400">📷 Preuve Photo Obligatoire</h3>
@@ -29,7 +19,6 @@
                 <canvas id="canvas-screenshot" class="hidden"></canvas>
             </div>
 
-            <!-- GROS MESSAGE DE PRÉVENTION ROUGE DANS LE MODAL -->
             <div class="bg-red-950/40 border border-red-500/40 rounded-xl p-3 text-center">
                 <p class="text-red-400 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-triangle-exclamation"></i> Attention Sécurité
@@ -46,7 +35,6 @@
         </div>
     </div>
 
-    <!-- NAVBAR -->
     <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
         <span class="text-xl font-black text-indigo-500 tracking-wide">CHALLENGE<span class="text-emerald-400">HUB</span></span>
         <div class="text-right">
@@ -57,7 +45,6 @@
 
     <main class="max-w-5xl mx-auto p-4 space-y-6">
 
-        <!-- GROS BANDEAU DE PRÉVENTION GENERAL ROUGE -->
         <div class="bg-red-950/30 border-2 border-red-500/40 rounded-2xl p-4 flex items-center gap-4 shadow-lg">
             <div class="bg-red-500/10 text-red-400 rounded-xl p-3 text-xl hidden sm:block">
                 <i class="fa-solid fa-shield-halved"></i>
@@ -65,12 +52,11 @@
             <div>
                 <h4 class="text-sm font-black text-red-400 uppercase tracking-wider">🚨 Avis important de modération et sécurité</h4>
                 <p class="text-xs text-red-200/80 mt-1 font-medium leading-relaxed">
-                    Toutes les photos prises dans ce salon sont partagées en direct aux autres membres connectés. Pour votre sécurité, <span class="text-red-400 font-black underline text-sm">ne partagez pas de données/photos sensibles</span> (visages confidentiels, informations personnelles, etc.) sur la plateforme.
+                    Pour votre sécurité, <span class="text-red-400 font-black underline text-sm">ne partagez pas de données/photos sensibles</span> (visages confidentiels, informations personnelles, etc.) sur la plateforme.
                 </p>
             </div>
         </div>
 
-        <!-- INFOS SESSION -->
         <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <span class="text-[10px] bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 px-2.5 py-1 rounded-md font-bold uppercase">Preuve par Caméra Active</span>
@@ -82,7 +68,7 @@
                     <p class="text-base font-mono font-black text-emerald-400" id="total-xp"><%= user.xp %> XP</p>
                 </div>
                 <% if (isCreateur) { %>
-                    <form action="/fermer-salon" method="POST" onsubmit="return confirm('Fermer et supprimer définitivement ce salon h24 ?');">
+                    <form action="/fermer-salon" method="POST" onsubmit="return confirm('Fermer et supprimer définitivement ce salon ?');">
                         <input type="hidden" name="code" value="<%= codeSession %>">
                         <input type="hidden" name="pseudo" value="<%= user.pseudo %>">
                         <button type="submit" class="bg-rose-600/20 text-rose-400 border border-rose-500/30 font-bold px-4 py-3 rounded-xl text-xs uppercase hover:bg-rose-600 hover:text-white transition">Fermer le Salon</button>
@@ -93,7 +79,6 @@
             </div>
         </section>
 
-        <!-- DÉFIS -->
         <section class="space-y-4">
             <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">🎯 Objectifs du jour</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -114,9 +99,8 @@
             </div>
         </section>
 
-        <!-- CLASSEMENT -->
         <section class="bg-slate-900 rounded-2xl p-6 border border-slate-800 space-y-4">
-            <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">🏆 Classement Live avec Preuves</h2>
+            <h2 class="text-xs font-black uppercase tracking-wider text-slate-400">🏆 Classement (Recharger pour actualiser)</h2>
             <div id="board-live" class="space-y-2">
                 <% leaderboard.forEach(player => { %>
                     <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 <%= player.pseudo === user.pseudo ? 'ring-1 ring-indigo-500/70' : '' %>">
@@ -138,15 +122,13 @@
     </main>
 
     <script>
-        const socket = io();
         const monPseudo = "<%= user.pseudo %>";
         const codeSession = "<%= codeSession %>";
 
         let currentDefiId = null;
         let localStream = null;
 
-        socket.emit('rejoindre_salon', { pseudo: monPseudo, codeSession: codeSession });
-
+        // Ouvrir le flux de la caméra
         async function ouvrirCamera(defiId) {
             currentDefiId = defiId;
             document.getElementById('camera-modal').classList.remove('hidden');
@@ -154,11 +136,12 @@
                 localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
                 document.getElementById('video-stream').srcObject = localStream;
             } catch (err) {
-                alert("Impossible d'accéder à l'appareil photo. Vérifiez vos autorisations.");
+                alert("Impossible d'accéder à l'appareil photo. Vérifiez vos autorisations (HTTPS obligatoire).");
                 fermerCamera();
             }
         }
 
+        // Éteindre la caméra et cacher le modal
         function fermerCamera() {
             document.getElementById('camera-modal').classList.add('hidden');
             if (localStream) {
@@ -166,6 +149,7 @@
             }
         }
 
+        // Prendre la capture et l'envoyer au serveur via Vercel (HTTP POST)
         function capturerPhoto() {
             const video = document.getElementById('video-stream');
             const canvas = document.getElementById('canvas-screenshot');
@@ -175,66 +159,45 @@
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            // Compression de l'image pour alléger la requête
+            const photoBase64 = canvas.toDataURL('image/jpeg', 0.5);
             fermerCamera();
 
-            socket.emit('action_valider', { id: currentDefiId, image: photoBase64 });
-        }
-
-        socket.on('validation_reussie', (data) => {
-            document.getElementById('profil-rank').innerText = `Niv. ${data.joueur.niveau} • ${data.joueur.rang}`;
-            document.getElementById('total-xp').innerText = `${data.joueur.xp} XP`;
-            const btn = document.getElementById(`action-${data.defiId}`);
-            btn.innerText = "Validé avec succès ✔️";
-            btn.disabled = true;
-            btn.className = "w-full font-bold py-2 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed";
-            document.getElementById(`box-${data.defiId}`).classList.add('border-emerald-500/30', 'opacity-50', 'bg-slate-900/40');
-        });
-
-        socket.on('maj_classement_global', (nouveauLeaderboard) => {
-            const container = document.getElementById('board-live');
-            container.innerHTML = '';
-            nouveauLeaderboard.forEach(player => {
-                const estMoi = player.pseudo === monPseudo;
-                const imgTag = player.dernierePhoto ? `<img src="${player.dernierePhoto}" class="w-8 h-8 rounded-md object-cover border border-slate-700" onclick="window.open(this.src)">` : `<div class="w-8 h-8 rounded-md bg-slate-800 flex items-center justify-center text-[10px]">❌</div>`;
-                
-                const div = document.createElement('div');
-                div.className = `flex items-center justify-between p-3 rounded-xl bg-slate-800/30 border border-slate-800/80 ${estMoi ? 'ring-1 ring-indigo-500/70' : ''}`;
-                div.innerHTML = `
-                    <div class="flex items-center space-x-3 text-sm">
-                        <span class="font-black text-slate-500 w-6">#${player.position}</span>
-                        ${imgTag}
-                        <span class="font-bold">${player.pseudo} <span class="text-[10px] text-slate-500 font-normal ml-1">(Niv.${player.niveau})</span></span>
-                    </div>
-                    <span class="text-xs font-mono font-bold text-indigo-400">${player.xp} XP</span>
-                `;
-                container.appendChild(div);
-            });
-        });
-
-        socket.on('alerte_pote_reussite', (data) => {
-            if (data.pseudo !== monPseudo) {
-                const toast = document.getElementById('toast-notif');
-                const toastImg = document.getElementById('toast-img-pote');
-                
-                document.getElementById('toast-msg').innerText = `${data.pseudo} a validé : "${data.titreDefi}" !`;
-                
-                if(data.image) {
-                    toastImg.src = data.image;
-                    toastImg.classList.remove('hidden');
+            // Envoi HTTP POST compatible architecture Vercel Serverless
+            fetch('/salon/valider', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: codeSession,
+                    pseudo: monPseudo,
+                    defiId: currentDefiId,
+                    image: photoBase64
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Changement visuel immédiat de l'interface
+                    document.getElementById('profil-rank').innerText = `Niv. ${data.joueur.niveau} • ${data.joueur.rang}`;
+                    document.getElementById('total-xp').innerText = `${data.joueur.xp} XP`;
+                    
+                    const btn = document.getElementById(`action-${data.defiId}`);
+                    btn.innerText = "Validé avec succès ✔️";
+                    btn.disabled = true;
+                    btn.className = "w-full font-bold py-2 rounded-lg text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed";
+                    document.getElementById(`box-${data.defiId}`).classList.add('border-emerald-500/30', 'opacity-50', 'bg-slate-900/40');
+                    
+                    // Rechargement pour voir l'image dans le classement global
+                    setTimeout(() => { window.location.reload(); }, 800);
+                } else {
+                    alert("Erreur : " + data.error);
                 }
-
-                toast.classList.remove('opacity-0', '-translate-y-5');
-                setTimeout(() => { 
-                    toast.classList.add('opacity-0', '-translate-y-5'); 
-                }, 4000);
-            }
-        });
-
-        socket.on('salon_ferme_par_hote', () => {
-            alert("L'hôte a fermé la session.");
-            window.location.href = "/";
-        });
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erreur réseau lors de la validation du défi.");
+            });
+        }
     </script>
 </body>
 </html>
